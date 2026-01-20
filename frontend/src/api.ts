@@ -132,3 +132,73 @@ export async function postContent(data: {
     body: JSON.stringify(data),
   })
 }
+
+// ============ Settings ============
+
+export interface ApiKey {
+  id: number
+  provider: string
+  name: string
+  api_key_masked: string
+  is_default: boolean
+  is_active: boolean
+}
+
+export interface SocialAccount {
+  id: number
+  platform: string
+  username: string
+  display_name: string | null
+  is_connected: boolean
+  is_active: boolean
+}
+
+// API Keys
+export async function getApiKeys(): Promise<ApiKey[]> {
+  return fetchAPI('/settings/api-keys')
+}
+
+export async function createApiKey(data: {
+  provider: string
+  name: string
+  api_key: string
+}): Promise<ApiKey> {
+  return fetchAPI('/settings/api-keys', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteApiKey(keyId: number): Promise<void> {
+  return fetchAPI(`/settings/api-keys/${keyId}`, {
+    method: 'DELETE',
+  })
+}
+
+export async function setDefaultApiKey(keyId: number): Promise<void> {
+  return fetchAPI(`/settings/api-keys/${keyId}/set-default`, {
+    method: 'POST',
+  })
+}
+
+// Social Accounts
+export async function getSocialAccounts(): Promise<SocialAccount[]> {
+  return fetchAPI('/settings/social-accounts')
+}
+
+export async function createSocialAccount(data: {
+  platform: string
+  username: string
+  display_name?: string
+}): Promise<SocialAccount> {
+  return fetchAPI('/settings/social-accounts', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteSocialAccount(accountId: number): Promise<void> {
+  return fetchAPI(`/settings/social-accounts/${accountId}`, {
+    method: 'DELETE',
+  })
+}

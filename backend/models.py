@@ -147,6 +147,32 @@ class Account(Base):
     posts: Mapped[list["Post"]] = relationship(back_populates="account")
 
 
+class AIProvider(str, Enum):
+    """AI provider options."""
+
+    OPENAI = "openai"
+    ANTHROPIC = "anthropic"
+
+
+class ApiKey(Base):
+    """API keys for AI providers."""
+
+    __tablename__ = "api_keys"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    provider: Mapped[str] = mapped_column(String(50))
+    name: Mapped[str] = mapped_column(String(255))
+
+    # Encrypted API key
+    api_key_encrypted: Mapped[str] = mapped_column(Text)
+
+    is_default: Mapped[bool] = mapped_column(default=False)
+    is_active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class Post(Base):
     """Scheduled or published posts."""
 

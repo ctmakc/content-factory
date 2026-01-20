@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api import content_router, distribution_router, research_router
+from backend.api.settings import router as settings_router
 from backend.config import get_settings
 from backend.database import close_db, init_db
 
@@ -42,15 +43,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware for frontend
+# CORS middleware for frontend (allow all localhost for dev)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:3000",  # Alternative frontend
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=["*"],  # Allow all origins in dev
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -60,6 +56,7 @@ app.add_middleware(
 app.include_router(research_router, prefix="/api")
 app.include_router(content_router, prefix="/api")
 app.include_router(distribution_router, prefix="/api")
+app.include_router(settings_router, prefix="/api")
 
 
 @app.get("/")
