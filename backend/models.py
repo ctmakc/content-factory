@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.database import Base
@@ -207,3 +207,135 @@ class Post(Base):
     # Relationships
     content: Mapped["Content"] = relationship(back_populates="posts")
     account: Mapped["Account"] = relationship(back_populates="posts")
+
+
+class ArticleReview(Base):
+    """Saved editorial review for a generated article artifact."""
+
+    __tablename__ = "article_reviews"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    run_slug: Mapped[str] = mapped_column(String(255), index=True)
+    artifact_path: Mapped[str] = mapped_column(String(1000), unique=True, index=True)
+    project: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    title: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    usefulness_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    seo_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    geo_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    human_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    brand_fit_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    safety_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    verdict: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    tags_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class PromptBattleEvaluation(Base):
+    """Saved evaluation for a prompt battle candidate."""
+
+    __tablename__ = "prompt_battle_evaluations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    battle_slug: Mapped[str] = mapped_column(String(255), index=True)
+    candidate_name: Mapped[str] = mapped_column(String(255), index=True)
+    candidate_key: Mapped[str] = mapped_column(String(600), unique=True, index=True)
+    article_path: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    usefulness_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    seo_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    geo_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    human_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    brand_fit_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    safety_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    verdict: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    is_winner: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class PublicationExperiment(Base):
+    """External publication and ranking experiment record."""
+
+    __tablename__ = "publication_experiments"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project: Mapped[str] = mapped_column(String(255), index=True)
+    content_title: Mapped[str] = mapped_column(String(500))
+    source_artifact_path: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    platform: Mapped[str] = mapped_column(String(100), index=True)
+    status: Mapped[str] = mapped_column(String(50), default="planned", index=True)
+    published_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    canonical_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    search_property: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    index_status: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    rank_status: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    target_query: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    device: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    baseline_rank: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    latest_rank: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    payload_format: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    payload_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    tags_csv: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class PromptAssetProfile(Base):
+    """Persistent lifecycle metadata for prompt assets."""
+
+    __tablename__ = "prompt_asset_profiles"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    asset_key: Mapped[str] = mapped_column(String(600), unique=True, index=True)
+    project: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    label: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="draft", index=True)
+    tier: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    tags_csv: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    default_for_project: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    linked_test_case_slug: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class PromptTestCaseProfile(Base):
+    """Persistent lifecycle metadata for reusable test cases."""
+
+    __tablename__ = "prompt_test_case_profiles"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    slug: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    project: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    title: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="active", index=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    priority: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    tags_csv: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    target_model: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )

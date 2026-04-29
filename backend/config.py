@@ -24,16 +24,22 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "sqlite+aiosqlite:///./content_factory.db"
 
-    # AI Provider (openai or anthropic)
-    ai_provider: Literal["openai", "anthropic"] = "openai"
+    # AI Provider (gemini, anthropic, or openai)
+    # Priority: gemini (free tier) -> anthropic (fallback)
+    ai_provider: Literal["gemini", "anthropic", "openai"] = "gemini"
+    ai_fallback_provider: Literal["anthropic", "openai", ""] = "anthropic"
+
+    # Google Gemini (primary - has free tier)
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-1.5-flash"
+
+    # Anthropic (fallback)
+    anthropic_api_key: str = ""
+    anthropic_model: str = "claude-3-haiku-20240307"
 
     # OpenAI
     openai_api_key: str = ""
-    openai_model: str = "gpt-3.5-turbo"
-
-    # Anthropic
-    anthropic_api_key: str = ""
-    anthropic_model: str = "claude-3-haiku-20240307"
+    openai_model: str = "gpt-4o-mini"
 
     # Social Media Credentials (encrypted in production)
     linkedin_client_id: str = ""

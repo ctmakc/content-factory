@@ -9,7 +9,7 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.api import content_router, distribution_router, research_router
+from backend.api import content_router, distribution_router, experiments_router, ops_router, promptlab_router, research_router, workspace_router
 from backend.api.settings import router as settings_router
 from backend.config import get_settings
 from backend.database import close_db, init_db
@@ -56,6 +56,10 @@ app.add_middleware(
 app.include_router(research_router, prefix="/api")
 app.include_router(content_router, prefix="/api")
 app.include_router(distribution_router, prefix="/api")
+app.include_router(experiments_router, prefix="/api")
+app.include_router(ops_router, prefix="/api")
+app.include_router(promptlab_router, prefix="/api")
+app.include_router(workspace_router, prefix="/api")
 app.include_router(settings_router, prefix="/api")
 
 

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.crypto import decrypt, encrypt, mask_key
+from backend.crypto import decrypt, encrypt, encryption_status, mask_key
 from backend.database import get_db
 from backend.models import Account, ApiKey
 
@@ -39,6 +39,43 @@ class ApiKeyUpdate(BaseModel):
     name: Optional[str] = None
     api_key: Optional[str] = None
     is_default: Optional[bool] = None
+
+
+@router.get("/security-status")
+async def get_security_status(
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Return non-sensitive diagnostics about key storage and account readiness."""
+    api_result = await db.execute(select(ApiKey).where(ApiKey.is_active == True))  # noqa: E712
+    account_result = await db.execute(select(Account).where(Account.is_active == True))  # noqa: E712
+    api_keys = api_result.scalars().all()
+    accounts = account_result.scalars().all()
+
+    providers: dict[str, dict[str, Any]] = {}
+    for item in api_keys:
+        provider = providers.setdefault(item.provider, {"count": 0, "defaults": 0})
+        provider["count"] += 1
+        if item.is_default:
+            provider["defaults"] += 1
+
+    platforms: dict[str, dict[str, Any]] = {}
+    for item in accounts:
+        platform = platforms.setdefault(item.platform, {"count": 0, "connected": 0})
+        platform["count"] += 1
+        if item.access_token:
+            platform["connected"] += 1
+
+    return {
+        "crypto": encryption_status(),
+        "api_keys": {
+            "total": len(api_keys),
+            "providers": providers,
+        },
+        "accounts": {
+            "total": len(accounts),
+            "platforms": platforms,
+        },
+    }
 
 
 @router.post("/api-keys", response_model=ApiKeyResponse)

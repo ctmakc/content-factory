@@ -9,6 +9,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Activity,
+  FlaskConical,
+  ClipboardCheck,
+  BarChart3,
+  BookOpenCheck,
 } from 'lucide-react'
 
 interface NavItem {
@@ -22,6 +27,11 @@ const navItems: NavItem[] = [
   { to: '/research', icon: Search, label: 'Research' },
   { to: '/content', icon: FileText, label: 'Content' },
   { to: '/distribute', icon: Send, label: 'Distribute' },
+  { to: '/ops', icon: Activity, label: 'Ops' },
+  { to: '/workspace', icon: ClipboardCheck, label: 'Workspace' },
+  { to: '/battles', icon: FlaskConical, label: 'Prompt Battles' },
+  { to: '/promptlab', icon: BookOpenCheck, label: 'Prompt Lab' },
+  { to: '/experiments', icon: BarChart3, label: 'Experiments' },
 ]
 
 export default function Sidebar() {

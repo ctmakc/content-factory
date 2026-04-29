@@ -5,6 +5,11 @@ import Research from './pages/Research'
 import Content from './pages/Content'
 import Distribute from './pages/Distribute'
 import Settings from './pages/Settings'
+import Ops from './pages/Ops'
+import Battles from './pages/Battles'
+import Workspace from './pages/Workspace'
+import Experiments from './pages/Experiments'
+import PromptLab from './pages/PromptLab'
 
 function App() {
   return (
@@ -19,6 +24,11 @@ function App() {
             <Route path="/research" element={<Research />} />
             <Route path="/content" element={<Content />} />
             <Route path="/distribute" element={<Distribute />} />
+            <Route path="/ops" element={<Ops />} />
+            <Route path="/workspace" element={<Workspace />} />
+            <Route path="/battles" element={<Battles />} />
+            <Route path="/promptlab" element={<PromptLab />} />
+            <Route path="/experiments" element={<Experiments />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </div>

@@ -50,10 +50,12 @@ class WriterAgent:
 
         prompt = self._build_content_prompt(topic, content_type, research_context, platforms)
 
-        if self.settings.ai_provider == "openai":
-            response = await self._call_openai(prompt)
-        else:
+        if self.settings.ai_provider == "gemini":
+            response = await self._call_gemini(prompt)
+        elif self.settings.ai_provider == "anthropic":
             response = await self._call_anthropic(prompt)
+        else:
+            response = await self._call_openai(prompt)
 
         return self._parse_content_response(response)
 
@@ -123,6 +125,26 @@ Return ONLY valid JSON, no additional text."""
                 instructions.append(platform_guides[platform.lower()])
 
         return "\n".join(instructions) if instructions else "General social media best practices"
+
+    async def _call_gemini(self, prompt: str) -> str:
+        """Call Google Gemini API."""
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{self.settings.gemini_model}:generateContent",
+                params={"key": self.settings.gemini_api_key},
+                headers={"Content-Type": "application/json"},
+                json={
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {
+                        "temperature": 0.8,
+                        "maxOutputTokens": 2000,
+                    },
+                },
+                timeout=60.0,
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data["candidates"][0]["content"]["parts"][0]["text"]
 
     async def _call_openai(self, prompt: str) -> str:
         """Call OpenAI API."""

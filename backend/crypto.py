@@ -11,12 +11,15 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from backend.config import get_settings
 
 
+DEFAULT_ENCRYPTION_SECRET = "content-factory-dev-secret-key-change-in-prod"
+
+
 def _get_encryption_key() -> bytes:
     """Derive encryption key from a secret."""
     settings = get_settings()
     # Use a combination of values as the base secret
     # In production, use a proper secret management system
-    secret = os.environ.get("ENCRYPTION_SECRET", "content-factory-dev-secret-key-change-in-prod")
+    secret = os.environ.get("ENCRYPTION_SECRET", DEFAULT_ENCRYPTION_SECRET)
     salt = b"content-factory-salt"  # In production, store this securely
 
     kdf = PBKDF2HMAC(
@@ -51,3 +54,15 @@ def mask_key(key: str, visible_chars: int = 4) -> str:
     if len(key) <= visible_chars:
         return "••••"
     return "••••" + key[-visible_chars:]
+
+
+def encryption_status() -> dict[str, object]:
+    """Return non-sensitive diagnostics about current encryption setup."""
+    secret = os.environ.get("ENCRYPTION_SECRET", DEFAULT_ENCRYPTION_SECRET)
+    using_default = secret == DEFAULT_ENCRYPTION_SECRET
+    return {
+        "configured": bool(secret),
+        "using_default_secret": using_default,
+        "storage_mode": "fernet-derived",
+        "secret_source": "env" if "ENCRYPTION_SECRET" in os.environ else "builtin-dev-fallback",
+    }

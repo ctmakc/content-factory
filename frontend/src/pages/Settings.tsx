@@ -5,33 +5,32 @@ import {
   Key,
   Plus,
   Trash2,
-  Eye,
-  EyeOff,
   Save,
   Loader2,
-  CheckCircle,
   Linkedin,
   Twitter,
   Instagram,
   Youtube,
   Bot,
   AlertCircle,
+  FileText,
 } from 'lucide-react'
 import {
   getApiKeys,
   createApiKey,
   deleteApiKey,
   setDefaultApiKey,
+  getSecurityStatus,
   getSocialAccounts,
   createSocialAccount,
   deleteSocialAccount,
-  ApiKey,
-  SocialAccount,
 } from '../api'
 
 const providerIcons: Record<string, React.ElementType> = {
-  openai: Bot,
+  gemini: Bot,
   anthropic: Bot,
+  openai: Bot,
+  serpapi: Bot,
 }
 
 const platformIcons: Record<string, React.ElementType> = {
@@ -39,15 +38,22 @@ const platformIcons: Record<string, React.ElementType> = {
   twitter: Twitter,
   instagram: Instagram,
   youtube: Youtube,
+  devto: FileText,
+  hashnode: FileText,
+  medium: FileText,
 }
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<'ai' | 'social'>('ai')
   const [showAddKey, setShowAddKey] = useState(false)
   const [showAddAccount, setShowAddAccount] = useState(false)
-  const [newKey, setNewKey] = useState({ provider: 'openai', name: '', key: '' })
-  const [newAccount, setNewAccount] = useState({ platform: 'linkedin', username: '', display_name: '' })
+  const [newKey, setNewKey] = useState({ provider: 'gemini', name: '', key: '' })
+  const [newAccount, setNewAccount] = useState({ platform: 'linkedin', username: '', display_name: '', access_token: '' })
   const queryClient = useQueryClient()
+  const { data: securityStatus } = useQuery({
+    queryKey: ['securityStatus'],
+    queryFn: getSecurityStatus,
+  })
 
   // API Keys queries
   const { data: apiKeys = [], isLoading: keysLoading, error: keysError } = useQuery({
@@ -59,7 +65,7 @@ export default function Settings() {
     mutationFn: createApiKey,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['apiKeys'] })
-      setNewKey({ provider: 'openai', name: '', key: '' })
+      setNewKey({ provider: 'gemini', name: '', key: '' })
       setShowAddKey(false)
     },
   })
@@ -88,7 +94,7 @@ export default function Settings() {
     mutationFn: createSocialAccount,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['socialAccounts'] })
-      setNewAccount({ platform: 'linkedin', username: '', display_name: '' })
+      setNewAccount({ platform: 'linkedin', username: '', display_name: '', access_token: '' })
       setShowAddAccount(false)
     },
   })
@@ -115,6 +121,7 @@ export default function Settings() {
       platform: newAccount.platform,
       username: newAccount.username,
       display_name: newAccount.display_name || undefined,
+      access_token: newAccount.access_token || undefined,
     })
   }
 
@@ -124,6 +131,47 @@ export default function Settings() {
       <div>
         <h1 className="text-3xl font-bold text-white">Settings</h1>
         <p className="text-dark-400 mt-1">Manage your API keys and connected accounts</p>
+      </div>
+
+      <div className={`card ${securityStatus?.crypto.using_default_secret ? 'border-amber-500/30 bg-amber-500/5' : 'border-emerald-500/20 bg-emerald-500/5'}`}>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-white">Secret Storage Diagnostics</h2>
+            <p className="text-sm text-dark-300 mt-1">
+              Tokens are encrypted on the backend. This panel shows whether the app is still using the built-in dev secret.
+            </p>
+          </div>
+          <span className={`badge ${securityStatus?.crypto.using_default_secret ? 'badge-warning' : 'badge-success'}`}>
+            {securityStatus?.crypto.using_default_secret ? 'dev secret' : 'custom secret'}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
+          <div className="rounded-lg border border-dark-800 bg-dark-950/40 p-4">
+            <div className="text-xs text-dark-500">Storage Mode</div>
+            <div className="text-sm font-medium text-white mt-1">{securityStatus?.crypto.storage_mode ?? 'fernet-derived'}</div>
+          </div>
+          <div className="rounded-lg border border-dark-800 bg-dark-950/40 p-4">
+            <div className="text-xs text-dark-500">Secret Source</div>
+            <div className="text-sm font-medium text-white mt-1">{securityStatus?.crypto.secret_source ?? 'unknown'}</div>
+          </div>
+          <div className="rounded-lg border border-dark-800 bg-dark-950/40 p-4">
+            <div className="text-xs text-dark-500">API Keys</div>
+            <div className="text-sm font-medium text-white mt-1">{securityStatus?.api_keys.total ?? 0}</div>
+          </div>
+          <div className="rounded-lg border border-dark-800 bg-dark-950/40 p-4">
+            <div className="text-xs text-dark-500">Connected Accounts</div>
+            <div className="text-sm font-medium text-white mt-1">{securityStatus?.accounts.total ?? 0}</div>
+          </div>
+        </div>
+        {securityStatus?.crypto.using_default_secret ? (
+          <div className="text-xs text-amber-300 mt-4">
+            Before production use, set `ENCRYPTION_SECRET` for this backend. Existing saved tokens are fine for local dev, but not for a serious deployment.
+          </div>
+        ) : (
+          <div className="text-xs text-emerald-300 mt-4">
+            Backend encryption is running with a non-default secret. Keys remain masked in the UI and stored encrypted at rest.
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
@@ -178,8 +226,10 @@ export default function Settings() {
                     value={newKey.provider}
                     onChange={(e) => setNewKey(prev => ({ ...prev, provider: e.target.value }))}
                   >
+                    <option value="gemini">Google Gemini (Free tier!)</option>
+                    <option value="anthropic">Anthropic Claude</option>
                     <option value="openai">OpenAI</option>
-                    <option value="anthropic">Anthropic</option>
+                    <option value="serpapi">SERP API</option>
                   </select>
                 </div>
                 <div>
@@ -321,6 +371,9 @@ export default function Settings() {
                     <option value="twitter">Twitter</option>
                     <option value="instagram">Instagram</option>
                     <option value="youtube">YouTube</option>
+                    <option value="devto">DEV / Forem</option>
+                    <option value="hashnode">Hashnode</option>
+                    <option value="medium">Medium</option>
                   </select>
                 </div>
                 <div>
@@ -340,6 +393,19 @@ export default function Settings() {
                     value={newAccount.display_name}
                     onChange={(e) => setNewAccount(prev => ({ ...prev, display_name: e.target.value }))}
                   />
+                </div>
+                <div>
+                  <label className="label">Access Token / API Key (optional but recommended)</label>
+                  <input
+                    className="input"
+                    type="password"
+                    placeholder="Stored encrypted"
+                    value={newAccount.access_token}
+                    onChange={(e) => setNewAccount(prev => ({ ...prev, access_token: e.target.value }))}
+                  />
+                  <p className="text-xs text-dark-500 mt-2">
+                    Stored encrypted on the backend. Add this for DEV, Hashnode, Medium legacy token, or future platform automation.
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -425,8 +491,8 @@ export default function Settings() {
               <div>
                 <h3 className="font-medium text-white mb-1">OAuth Integration</h3>
                 <p className="text-sm text-dark-400">
-                  Full OAuth authentication for automated posting is coming soon.
-                  For now, you can copy generated content and post manually.
+                  Tokens and keys entered here are stored encrypted on the backend.
+                  OAuth is still future work, but token-based platform adapters can already be prepared from this interface.
                 </p>
               </div>
             </div>
